@@ -26,29 +26,33 @@ export class Question {
   })
   question: string;
 
-  @ManyToOne(() => Form, (form) => form.questions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Form, (form) => form.questions)
   form: Form;
 
   @ManyToOne(() => SubType, (subtype) => subtype.questions)
   subtype: SubType;
 
-  @OneToMany(() => SubQuestion, (subQuestions) => subQuestions.question, {
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => SubQuestion, (subQuestions) => subQuestions.question)
   subQuestions: SubQuestion[];
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp',
+    type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdAt: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp',
+    type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt: Date;
+
+  @Column('tinyint', {
+    width: 1,
+    default: 1,
+  })
+  active: boolean;
 }

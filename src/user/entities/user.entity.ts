@@ -58,20 +58,20 @@ export class User {
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp',
+    type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdAt: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp',
+    type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt: Date;
 
-  @OneToMany(() => Folder, (folder) => folder.user, { onDelete: 'CASCADE' })
+  @OneToMany(() => Folder, (folder) => folder.user)
   folder: Folder[];
 
   @BeforeInsert()
@@ -84,4 +84,10 @@ export class User {
   tokenExpirationDate() {
     this.tokenExpiration = new Date();
   }
+
+  @Column('tinyint', {
+    width: 1,
+    default: 1,
+  })
+  active: boolean;
 }

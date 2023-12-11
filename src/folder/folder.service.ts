@@ -35,7 +35,7 @@ export class FolderService {
       .where({ user: { id: userId } })
       .skip(offset)
       .take(limit)
-      .orderBy('folder.createdAt', 'ASC')
+      .orderBy('folder.createdAt', 'DESC')
       .leftJoin('folder.forms', 'form')
       .loadRelationCountAndMap('folder.formCount', 'folder.forms')
       .getMany();

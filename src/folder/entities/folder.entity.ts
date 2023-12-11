@@ -20,26 +20,30 @@ export class Folder {
   })
   name: string;
 
-  @ManyToOne(() => User, (user) => user.folder, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => User, (user) => user.folder)
   user: User;
 
-  @OneToMany(() => Form, (forms) => forms.folder, { onDelete: 'CASCADE' })
+  @OneToMany(() => Form, (forms) => forms.folder)
   forms: Form[];
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp',
+    type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdAt: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp',
+    type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt: Date;
+
+  @Column('tinyint', {
+    width: 1,
+    default: 1,
+  })
+  active: boolean;
 }
