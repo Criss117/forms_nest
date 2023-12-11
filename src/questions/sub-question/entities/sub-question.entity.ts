@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('suq_questions')
+@Entity('sub_questions')
 export class SubQuestion {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -18,7 +18,9 @@ export class SubQuestion {
   })
   subQuestion: string;
 
-  @ManyToOne(() => Question, (question) => question.subQuestions)
+  @ManyToOne(() => Question, (question) => question.subQuestions, {
+    nullable: false,
+  })
   question: Question;
 
   @CreateDateColumn({

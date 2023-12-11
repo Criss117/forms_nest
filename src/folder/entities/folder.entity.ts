@@ -20,7 +20,9 @@ export class Folder {
   })
   name: string;
 
-  @ManyToOne(() => User, (user) => user.folder, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.folder, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
   @OneToMany(() => Form, (forms) => forms.folder, { onDelete: 'CASCADE' })

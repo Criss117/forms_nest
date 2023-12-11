@@ -19,7 +19,7 @@ export class Question {
   @Column('bool', {
     default: false,
   })
-  requred: boolean;
+  required: boolean;
 
   @Column('varchar', {
     length: 255,

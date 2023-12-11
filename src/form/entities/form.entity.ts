@@ -40,7 +40,10 @@ export class Form {
   })
   updatedAt: Date;
 
-  @ManyToOne(() => Folder, (folder) => folder.forms, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Folder, (folder) => folder.forms, {
+    onDelete: 'CASCADE',
+    nullable: false,
+  })
   folder: Folder;
 
   @OneToMany(() => Question, (questions) => questions.form, {

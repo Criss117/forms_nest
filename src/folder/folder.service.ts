@@ -30,17 +30,15 @@ export class FolderService {
 
   async findManyByUserId(userId: number, paginationDto: PaginationDto) {
     const { limit = 10, offset = 0 } = paginationDto;
-    return await this.folderRepository.find({
-      skip: offset,
-      take: limit,
-      where: { user: { id: userId } },
-      order: {
-        createdAt: 'ASC',
-      },
-      relations: {
-        forms: true,
-      },
-    });
+    return await this.folderRepository
+      .createQueryBuilder('folder')
+      .where({ user: { id: userId } })
+      .skip(offset)
+      .take(limit)
+      .orderBy('folder.createdAt', 'ASC')
+      .leftJoin('folder.forms', 'form')
+      .loadRelationCountAndMap('folder.formCount', 'folder.forms')
+      .getMany();
   }
 
   async findOne(id: string, userId: number) {

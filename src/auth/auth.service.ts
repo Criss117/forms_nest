@@ -29,12 +29,11 @@ export class AuthService {
     };
 
     const user = await this.userService.findOne(email, select);
-
+    if (!user) throw new UnauthorizedException('User not found');
     this.verifyUser(password, user);
 
     const jwt = this.generateJWT({ id: user.id });
     response.cookie(process.env.JWT_COOKIE_NAME, jwt);
-
     return { email, name: user.name, surname: user.surname, jwt };
   }
 

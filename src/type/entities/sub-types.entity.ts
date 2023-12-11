@@ -25,7 +25,10 @@ export class SubType {
   })
   description: string;
 
-  @ManyToOne(() => Type, (type) => type.subTypes, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Type, (type) => type.subTypes, {
+    onDelete: 'CASCADE',
+    nullable: false,
+  })
   type: Type;
 
   @OneToMany(() => Question, (question) => question.subtype)
