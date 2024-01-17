@@ -7,8 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { FolderModule } from './folder/folder.module';
 import { TypeModule } from './type/type.module';
 import { SeedModule } from './seed/seed.module';
-import { QuestionsModule } from './questions/questions.module';
 import { FormModule } from './form/form.module';
+import { QuestionsModule } from './questions/questions.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { FormModule } from './form/form.module';
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_DB_NAME,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: false,
     }),
     UserModule,
     CommonModule,
@@ -29,8 +29,8 @@ import { FormModule } from './form/form.module';
     FolderModule,
     TypeModule,
     SeedModule,
-    QuestionsModule,
     FormModule,
+    QuestionsModule,
   ],
   controllers: [],
   providers: [],

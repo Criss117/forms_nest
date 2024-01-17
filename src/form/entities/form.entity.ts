@@ -1,5 +1,5 @@
+import { Question } from 'src/questions/entities/question.entity';
 import { Folder } from '../../folder/entities/folder.entity';
-import { Question } from '../../questions/question/entities/question.entity';
 import {
   Column,
   CreateDateColumn,

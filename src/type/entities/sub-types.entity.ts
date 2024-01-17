@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Type } from './type.entity';
-import { Question } from '../../questions/question/entities/question.entity';
+import { Question } from 'src/questions/entities/question.entity';
 
 @Entity('sub_types')
 export class SubType {

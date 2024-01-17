@@ -1,6 +1,6 @@
-import { Form } from '../../../form/entities/form.entity';
-import { SubQuestion } from '../../../questions/sub-question/entities/sub-question.entity';
-import { SubType } from '../../../type/entities/sub-types.entity';
+import { Answer } from 'src/questions/entities/answer.entity';
+import { Form } from '../../form/entities/form.entity';
+import { SubType } from '../../type/entities/sub-types.entity';
 import {
   Column,
   CreateDateColumn,
@@ -13,7 +13,7 @@ import {
 
 @Entity('questions')
 export class Question {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn()
   id: string;
 
   @Column('bool', {
@@ -32,8 +32,8 @@ export class Question {
   @ManyToOne(() => SubType, (subtype) => subtype.questions)
   subtype: SubType;
 
-  @OneToMany(() => SubQuestion, (subQuestions) => subQuestions.question)
-  subQuestions: SubQuestion[];
+  @OneToMany(() => Answer, (answers) => answers.question)
+  answers: Answer[];
 
   @CreateDateColumn({
     name: 'created_at',

@@ -30,7 +30,7 @@ export class SeedService {
     }
 
     await this.deleteTypes();
-    this.insertTypes();
+    await this.insertTypes();
     this.logger.log('Seed executed successfully', 'SeedRepository');
     return 'Seed Executed';
   }

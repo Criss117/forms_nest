@@ -40,15 +40,31 @@ export class FormService {
     const form = await this.formRepository.findOne({
       where: {
         id,
+      },
+      relations: {
         folder: {
+          user: true,
+        },
+        questions: {
+          answers: true,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        folder: {
+          id: true,
+          name: true,
           user: {
-            id: userId,
+            id: true,
           },
         },
       },
     });
 
-    if (!form) throw new ForbiddenException('Unauthorized user');
+    if (form.folder.user.id !== userId)
+      throw new ForbiddenException('Unauthorized user');
 
     return form;
   }

@@ -1,4 +1,4 @@
-import { Question } from '../../../questions/question/entities/question.entity';
+import { Question } from 'src/questions/entities/question.entity';
 import {
   Column,
   CreateDateColumn,
@@ -8,17 +8,17 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('sub_questions')
-export class SubQuestion {
-  @PrimaryGeneratedColumn('uuid')
+@Entity('answers')
+export class Answer {
+  @PrimaryGeneratedColumn()
   id: string;
 
   @Column('varchar', {
     length: 255,
   })
-  subQuestion: string;
+  answer: string;
 
-  @ManyToOne(() => Question, (question) => question.subQuestions, {
+  @ManyToOne(() => Question, (question) => question.answers, {
     nullable: false,
   })
   question: Question;

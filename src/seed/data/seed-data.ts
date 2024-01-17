@@ -13,6 +13,40 @@ export interface SeedSubTypes {
   };
 }
 
+export interface SeedUsers {
+  id: number;
+  name: string;
+  surname: string;
+  phone: string;
+  email: string;
+  password: string;
+  token: string;
+  confirm: boolean;
+}
+
+export const initialUsers: SeedUsers[] = [
+  {
+    id: 1,
+    name: 'admin',
+    surname: 'admin',
+    phone: '123456789',
+    email: 'admin@email.com',
+    password: 'HolaMundo123',
+    token: '',
+    confirm: true,
+  },
+  {
+    id: 2,
+    name: 'sary',
+    surname: 'yineth',
+    phone: '123456789',
+    email: 'sary@email.com',
+    password: 'HolaMundo123',
+    confirm: true,
+    token: '',
+  },
+];
+
 export const initialTypes: SeedTypes[] = [
   {
     id: 1,
@@ -60,7 +94,7 @@ export const initialSubTypes: SeedSubTypes[] = [
   },
   {
     id: 3,
-    name: 'Elección única',
+    name: 'Elección múltiple',
     description: 'Las opciones se muestran una tras otra',
     type: {
       id: 2,
