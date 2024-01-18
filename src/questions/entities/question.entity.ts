@@ -14,7 +14,7 @@ import {
 @Entity('questions')
 export class Question {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column('bool', {
     default: false,

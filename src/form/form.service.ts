@@ -47,6 +47,7 @@ export class FormService {
         },
         questions: {
           answers: true,
+          subtype: true,
         },
       },
       select: {
@@ -57,6 +58,14 @@ export class FormService {
           id: true,
           name: true,
           user: {
+            id: true,
+          },
+        },
+        questions: {
+          id: true,
+          question: true,
+          required: true,
+          subtype: {
             id: true,
           },
         },

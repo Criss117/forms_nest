@@ -1,15 +1,8 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Patch,
-  HttpCode,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, VerifyEmail } from './dto';
 import { ChangePassword } from './dto/change-password.dto';
+import { Auth } from '../auth/decorators';
 
 @Controller('user')
 export class UserController {
@@ -35,9 +28,9 @@ export class UserController {
     return this.userService.changePassword(userData);
   }
 
-  @Get(':prm')
-  @HttpCode(200)
-  findOne(@Param('prm') prm: string) {
-    return this.userService.findOne(prm);
+  @Get('is-authenticated')
+  @Auth()
+  isAuthenticated() {
+    return true;
   }
 }

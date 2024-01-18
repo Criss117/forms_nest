@@ -11,7 +11,7 @@ import {
 @Entity('answers')
 export class Answer {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column('varchar', {
     length: 255,

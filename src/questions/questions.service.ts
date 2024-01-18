@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -64,15 +64,46 @@ export class QuestionsService {
     return questions;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} question`;
-  }
+  async update(id: number, updateQuestionDto: UpdateQuestionDto) {
+    const { answers, question } = updateQuestionDto;
 
-  update(id: number, updateQuestionDto: UpdateQuestionDto) {
-    return `This action updates a #${id} question`;
-  }
+    const questionUpdated = await this.questionRepository.preload({
+      id,
+      ...question,
+    });
+    if (!questionUpdated) throw new NotFoundException('Question not found');
 
-  remove(id: number) {
-    return `This action removes a #${id} question`;
+    try {
+      this.questionRepository.save(questionUpdated);
+    } catch (error) {
+      handleDBErros(error, this.PATH);
+    }
+
+    if (!answers) return { statusCode: 200, message: 'Question updated' };
+
+    const answerPromise: Promise<Answer>[] = [];
+
+    answers.forEach(async (answer) => {
+      if (!answer.id) {
+        const answerUpdated = this.answerRepository.create({
+          ...answer,
+          question: { id: questionUpdated.id },
+        });
+        answerPromise.push(this.answerRepository.save(answerUpdated));
+      } else {
+        const answerUpdated = await this.answerRepository.preload({
+          id: answer.id,
+          ...answer,
+        });
+        answerPromise.push(this.answerRepository.save(answerUpdated));
+      }
+    });
+
+    try {
+      await Promise.all(answerPromise);
+      return { statusCode: 200, message: 'Question updated successfully' };
+    } catch (error) {
+      handleDBErros(error, this.PATH);
+    }
   }
 }

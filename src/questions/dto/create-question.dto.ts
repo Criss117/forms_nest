@@ -6,6 +6,8 @@ import {
   IsNotEmptyObject,
   IsNumber,
   IsObject,
+  IsOptional,
+  IsPositive,
   IsString,
   IsUUID,
   MaxLength,
@@ -30,6 +32,11 @@ class QuestionDto {
 }
 
 class AnswerDto {
+  @IsNumber()
+  @IsPositive()
+  @IsOptional()
+  id?: number;
+
   @IsString()
   @MaxLength(255)
   @MinLength(5)
