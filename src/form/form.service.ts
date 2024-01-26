@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -36,50 +36,78 @@ export class FormService {
     return `This action returns all form`;
   }
 
-  async findOne(id: string, userId: number) {
-    const form = await this.formRepository.findOne({
-      where: {
-        id,
-      },
-      relations: {
-        folder: {
-          user: true,
-        },
-        questions: {
-          answers: true,
-          subtype: true,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        folder: {
-          id: true,
-          name: true,
-          user: {
-            id: true,
-          },
-        },
-        questions: {
-          id: true,
-          question: true,
-          required: true,
-          subtype: {
-            id: true,
-          },
-        },
-      },
-    });
+  async findOne(id: string) {
+    // const form = await this.formRepository
+    //   .createQueryBuilder('form')
+    //   .leftJoinAndSelect('form.questions', 'question')
+    //   .leftJoin('question.answers', 'answer')
+    //   .leftJoinAndSelect('question.subtype', 'subtype')
+    //   .where('form.id = :id', { id })
+    //   .andWhere('question.active = :active', { active: true })
+    //   .getOne();
 
-    if (form.folder.user.id !== userId)
-      throw new ForbiddenException('Unauthorized user');
+    const form = await this.formRepository
+      .createQueryBuilder('form')
+      .leftJoinAndSelect(
+        'form.questions',
+        'question',
+        'question.active = :active',
+        {
+          active: true,
+        },
+      )
+      .leftJoinAndSelect(
+        'question.answers',
+        'answer',
+        'answer.active = :active',
+        {
+          active: true,
+        },
+      )
+      .leftJoinAndSelect('question.subtype', 'subtype')
+      .where('form.id = :id', { id })
+      .getOne();
 
+    // const form = await this.formRepository.findOne({
+    //   where: {
+    //     id,
+    //   },
+    //   relations: {
+    //     questions: {
+    //       answers: true,
+    //       subtype: true,
+    //     },
+    //   },
+    //   select: {
+    //     id: true,
+    //     name: true,
+    //     description: true,
+    //     folder: {
+    //       id: true,
+    //       name: true,
+    //       user: {
+    //         id: true,
+    //       },
+    //     },
+    //     questions: {
+    //       id: true,
+    //       question: true,
+    //       required: true,
+    //       subtype: {
+    //         id: true,
+    //       },
+    //     },
+    //   },
+    // });
+
+    // if (form.folder.user.id !== userId)
+    //   throw new ForbiddenException('Unauthorized user');
+    console.log(form);
     return form;
   }
 
-  async remove(id: string, userId: number) {
-    const form = await this.findOne(id, userId);
+  async remove(id: string) {
+    const form = await this.findOne(id);
 
     try {
       await this.formRepository.remove(form);

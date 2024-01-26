@@ -23,9 +23,9 @@ export class QuestionsController {
     return this.questionsService.update(+id, updateQuestionDto);
   }
 
-  @Delete(':id')
   @Auth()
-  delte(@Param('id') id: string) {
+  @Delete(':id')
+  delete(@Param('id') id: string) {
     return this.questionsService.delete(+id);
   }
 }

@@ -15,13 +15,13 @@ export class FormController {
 
   @Get(':id')
   @Auth()
-  findOne(@Param('id') id: string, @GetUser('id') userId: number) {
-    return this.formService.findOne(id, userId);
+  findOne(@Param('id') id: string) {
+    return this.formService.findOne(id);
   }
 
   @Delete(':id')
   @Auth()
-  remove(@Param('id') id: string, @GetUser('id') userId: number) {
-    return this.formService.remove(id, userId);
+  remove(@Param('id') id: string) {
+    return this.formService.remove(id);
   }
 }
