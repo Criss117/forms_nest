@@ -7,7 +7,6 @@ import {
   IsNumber,
   IsObject,
   IsOptional,
-  IsPositive,
   IsString,
   IsUUID,
   MaxLength,
@@ -33,7 +32,6 @@ class QuestionDto {
 
 class AnswerDto {
   @IsNumber()
-  @IsPositive()
   @IsOptional()
   id?: number;
 
