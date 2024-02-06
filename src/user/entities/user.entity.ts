@@ -50,6 +50,16 @@ export class User {
   })
   confirm: boolean;
 
+  @Column('int', {
+    default: 5,
+  })
+  folder_limit?: number;
+
+  @Column('int', {
+    default: 5,
+  })
+  form_limit?: number;
+
   @Column('timestamp', {
     name: 'token_expiration',
     nullable: true,

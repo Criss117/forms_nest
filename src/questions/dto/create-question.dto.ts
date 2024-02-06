@@ -52,5 +52,6 @@ export class CreateQuestionDto {
   @ValidateNested({ each: true })
   @Type(() => AnswerDto)
   @IsNotEmpty()
+  @IsOptional()
   answers: AnswerDto[];
 }

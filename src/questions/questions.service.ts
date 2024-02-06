@@ -34,6 +34,10 @@ export class QuestionsService {
 
       const answerPromise: Promise<Answer>[] = [];
 
+      if (!answers) {
+        return { questionId: questionCreated.id };
+      }
+
       answers.forEach(async (answer) => {
         const newAnswer = this.answerRepository.create({
           ...answer,

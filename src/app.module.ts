@@ -21,7 +21,7 @@ import { QuestionsModule } from './questions/questions.module';
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_DB_NAME,
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true,
     }),
     UserModule,
     CommonModule,

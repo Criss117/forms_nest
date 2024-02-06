@@ -6,6 +6,7 @@ import { Folder } from './entities/folder.entity';
 import { CreateFolderDto, UpdateFolderDto } from './dto';
 import { handleDBErros } from '../common/utils/functions';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class FolderService {
@@ -13,9 +14,13 @@ export class FolderService {
   constructor(
     @InjectRepository(Folder)
     private readonly folderRepository: Repository<Folder>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async create(createFolderDto: CreateFolderDto, userId: number) {
+    await this.verifyUserFolderLimit(userId);
+
     try {
       const newFolder = this.folderRepository.create({
         ...createFolderDto,
@@ -86,5 +91,38 @@ export class FolderService {
     } catch (error) {
       handleDBErros(error, this.PATH);
     }
+  }
+
+  async verifyUserFolderLimit(userId: number) {
+    const folders = this.folderRepository.count({
+      where: {
+        user: {
+          id: userId,
+        },
+      },
+    });
+
+    const maxFolders = this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      select: {
+        folder_limit: true,
+      },
+    });
+
+    await Promise.all([folders, maxFolders])
+      .then(([folders, maxFolders]) => {
+        if (folders >= maxFolders.folder_limit) {
+          throw new ForbiddenException(
+            `You have reached the maximum number of folders`,
+          );
+        }
+      })
+      .catch((error) => {
+        handleDBErros(error, this.PATH);
+      });
+
+    return true;
   }
 }
