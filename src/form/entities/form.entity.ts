@@ -16,7 +16,7 @@ export class Form {
   id: string;
 
   @Column('varchar', {
-    length: 100,
+    length: 30,
   })
   name: string;
 

@@ -61,6 +61,6 @@ export class FolderController {
     @GetUser('id') userId: number,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.folderService.dalete(id, userId);
+    return this.folderService.delete(id, userId);
   }
 }

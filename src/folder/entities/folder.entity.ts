@@ -16,7 +16,7 @@ export class Folder {
   id: string;
 
   @Column('varchar', {
-    length: 50,
+    length: 30,
   })
   name: string;
 

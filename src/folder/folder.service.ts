@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -83,11 +87,16 @@ export class FolderService {
     }
   }
 
-  async dalete(id: string, userId: number) {
-    const folder = await this.findOne(id, userId);
+  async delete(id: string, userId: number) {
+    const folder = await this.folderRepository.preload({
+      id,
+      user: { id: userId },
+    });
+    if (!folder) throw new NotFoundException('Folder not found');
     try {
-      await this.folderRepository.remove(folder);
-      return { message: `Folder with id ${id} was removed` };
+      folder.active = false;
+      await this.folderRepository.save(folder);
+      return folder.id;
     } catch (error) {
       handleDBErros(error, this.PATH);
     }
