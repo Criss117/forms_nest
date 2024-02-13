@@ -39,34 +39,26 @@ export class FolderService {
 
   async findManyByUserId(userId: number, paginationDto: PaginationDto) {
     const { limit = 10, offset = 0 } = paginationDto;
-    return await this.folderRepository
+    const folder = await this.folderRepository
       .createQueryBuilder('folder')
-      .where({ user: { id: userId } })
       .skip(offset)
       .take(limit)
       .orderBy('folder.createdAt', 'DESC')
       .leftJoin('folder.forms', 'form')
       .loadRelationCountAndMap('folder.formCount', 'folder.forms')
+      .where({ user: { id: userId } })
       .getMany();
+    return folder;
   }
 
   async findOne(id: string, userId: number) {
-    const folder = await this.folderRepository.findOne({
-      where: {
-        id,
-        user: {
-          id: userId,
-        },
-      },
-      relations: {
-        forms: true,
-      },
-      select: {
-        user: {
-          id: true,
-        },
-      },
-    });
+    const folder = await this.folderRepository
+      .createQueryBuilder('folder')
+      .leftJoinAndSelect('folder.forms', 'form', 'form.active = :active', {
+        active: true,
+      })
+      .where({ id, user: { id: userId } })
+      .getOne();
 
     if (!folder) throw new ForbiddenException('Unauthorized user');
 

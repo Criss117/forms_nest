@@ -21,7 +21,7 @@ export class FormController {
 
   @Delete(':id')
   @Auth()
-  remove(@Param('id') id: string) {
-    return this.formService.remove(id);
+  remove(@Param('id') id: string, @GetUser('id') userId: number) {
+    return this.formService.remove(id, userId);
   }
 }

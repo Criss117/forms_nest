@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -61,15 +65,37 @@ export class FormService {
       .leftJoinAndSelect('question.subtype', 'subtype')
       .where('form.id = :id', { id })
       .getOne();
+
     return form;
   }
 
-  async remove(id: string) {
-    const form = await this.findOne(id);
+  async remove(id: string, userId: number) {
+    const form = await this.formRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        folder: {
+          user: true,
+        },
+      },
+    });
+
+    if (!form) throw new NotFoundException('Form not found');
+
+    if (!form.active) {
+      throw new NotFoundException('Form not found');
+    }
+
+    if (form.folder.user.id !== userId) {
+      throw new UnauthorizedException('Unauthorized user');
+    }
+
+    form.active = false;
 
     try {
-      await this.formRepository.remove(form);
-      return { message: `Form with id ${id} was removed` };
+      await this.formRepository.save(form);
+      return { formId: form.id };
     } catch (error) {
       handleDBErros(error, this.PATH);
     }

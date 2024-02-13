@@ -58,14 +58,10 @@ export class UserService {
       throw new ConflictException('The user is already confirmed');
 
     if (tokenExpired(user.tokenExpiration)) {
-      try {
-        await this.userRepository.remove(user);
-        throw new UnauthorizedException(
-          'Token has expired please create an account again',
-        );
-      } catch (error) {
-        handleDBErros(error, this.PATH);
-      }
+      await this.userRepository.remove(user);
+      throw new UnauthorizedException(
+        'Token has expired please create an account again',
+      );
     }
 
     user.confirm = true;
@@ -109,8 +105,8 @@ export class UserService {
     user.token = generateToken();
 
     await this.userRepository.save(user);
-
     return {
+      statusCode: 200,
       message: 'The email has been verified and token created correctly',
     };
   }
