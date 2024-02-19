@@ -25,8 +25,10 @@ export class User {
   })
   surname: string;
 
-  @Column('bigint')
-  phone: number;
+  @Column('varchar', {
+    length: 20,
+  })
+  phone: string;
 
   @Column('varchar', {
     length: 320,

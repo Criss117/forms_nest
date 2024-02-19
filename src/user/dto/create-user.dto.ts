@@ -1,12 +1,9 @@
 import {
-  Max,
   IsString,
   MinLength,
   MaxLength,
   Matches,
   IsEmail,
-  IsPositive,
-  IsNumber,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -33,8 +30,8 @@ export class CreateUserDto {
   })
   password: string;
 
-  @IsNumber()
-  @IsPositive()
-  @Max(9999999999)
-  phone: number;
+  @IsString()
+  @MinLength(3)
+  @MaxLength(20)
+  phone: string;
 }
