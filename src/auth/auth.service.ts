@@ -1,4 +1,3 @@
-import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
@@ -16,7 +15,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(loginUserDto: LoginUserDto, response: Response) {
+  async login(loginUserDto: LoginUserDto) {
     const { email, password } = loginUserDto;
 
     const select: userSelectTypes = {
@@ -33,8 +32,19 @@ export class AuthService {
     this.verifyUser(password, user);
 
     const jwt = this.generateJWT({ id: user.id });
-    response.cookie(process.env.JWT_COOKIE_NAME, jwt);
-    return { email, name: user.name, surname: user.surname, jwt };
+
+    const response = {
+      statusCode: 200,
+      message: 'Login successful',
+      data: {
+        email: user.email,
+        name: user.name,
+        surname: user.surname,
+        jwt,
+      },
+    };
+
+    return response;
   }
 
   private generateJWT(payload: JwtPayLoad) {

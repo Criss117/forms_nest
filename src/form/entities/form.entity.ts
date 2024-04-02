@@ -42,6 +42,7 @@ export class Form {
 
   @ManyToOne(() => Folder, (folder) => folder.forms, {
     nullable: false,
+    onDelete: 'CASCADE',
   })
   folder: Folder;
 

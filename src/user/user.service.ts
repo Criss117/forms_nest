@@ -16,7 +16,12 @@ import {
 } from '../common/utils/functions';
 import { User } from './entities/user.entity';
 import { userSelectTypes } from './types/user-select.types';
-import { ChangePassword, CreateUserDto, VerifyEmail } from './dto';
+import {
+  ChangePasswordDto,
+  ConfirmAccountDto,
+  CreateUserDto,
+  VerifyEmailDto,
+} from './dto';
 import { FolderService } from '../folder/folder.service';
 import { newUserFolder } from '../common/utils/const';
 
@@ -33,6 +38,7 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     try {
       const { password, ...userData } = createUserDto;
+
       const newUser = this.userRepository.create({
         ...userData,
         token: generateToken(),
@@ -41,15 +47,15 @@ export class UserService {
       await this.userRepository.save(newUser);
       //TODO: send email
 
-      return { statusCode: 200, message: 'User created successfully' };
+      return { statusCode: 201, message: 'User created successfully' };
     } catch (error) {
       handleDBErros(error, this.PATH);
     }
   }
 
-  async confirm(token: string) {
+  async confirm(confirmAccountDto: ConfirmAccountDto) {
     const user = await this.userRepository.findOne({
-      where: { token },
+      where: { token: confirmAccountDto.token },
     });
 
     if (!user) throw new BadRequestException('User not found');
@@ -94,8 +100,8 @@ export class UserService {
     if (!user) throw new NotFoundException('User not found');
   }
 
-  async verifyEmail(emailClient: VerifyEmail) {
-    const user = await this.findOne(emailClient.email);
+  async verifyEmail(verifyEmailDto: VerifyEmailDto) {
+    const user = await this.findOne(verifyEmailDto.email);
 
     if (!user) throw new NotFoundException('User not found');
     if (!user.confirm) throw new UnauthorizedException('User not authorized');
@@ -103,6 +109,8 @@ export class UserService {
       throw new ConflictException('The token has already been generated');
 
     user.token = generateToken();
+    user.tokenExpiration = new Date(Date.now() + 1000 * 60 * 10);
+    console.log({ token: user.tokenExpiration });
 
     await this.userRepository.save(user);
     return {
@@ -111,19 +119,26 @@ export class UserService {
     };
   }
 
-  async changePassword(userData: ChangePassword) {
+  async changePassword(changePasswordDto: ChangePasswordDto) {
     const newUser = await this.userRepository.findOneBy({
-      token: userData.token,
+      token: changePasswordDto.token,
     });
 
     if (!newUser) throw new BadRequestException('User not found');
     if (!newUser.confirm)
       throw new ConflictException('The user is not confirmed');
 
-    if (tokenExpired(newUser.tokenExpiration))
+    if (tokenExpired(newUser.tokenExpiration)) {
+      newUser.token = '';
+      try {
+        await this.userRepository.save(newUser);
+      } catch (error) {
+        handleDBErros(error, this.PATH);
+      }
       throw new UnauthorizedException('Token has expired');
+    }
 
-    newUser.password = hashpassword(userData.password);
+    newUser.password = hashpassword(changePasswordDto.password);
     newUser.token = '';
 
     try {
@@ -131,7 +146,7 @@ export class UserService {
     } catch (error) {
       handleDBErros(error, this.PATH);
     }
-    return { message: 'Password updated successfully' };
+    return { statusCode: 200, message: 'Password updated successfully' };
   }
 
   sayHello() {

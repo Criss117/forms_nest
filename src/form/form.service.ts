@@ -32,7 +32,11 @@ export class FormService {
     try {
       await this.formRepository.save(newForm);
       return {
-        formId: newForm.id,
+        statusCode: 200,
+        message: 'Form created successfully',
+        data: {
+          formId: newForm.id,
+        },
       };
     } catch (error) {
       handleDBErros(error, this.PATH);

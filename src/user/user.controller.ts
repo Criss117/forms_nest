@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, VerifyEmail } from './dto';
-import { ChangePassword } from './dto/change-password.dto';
+import { ConfirmAccountDto, CreateUserDto, VerifyEmailDto } from './dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Auth } from '../auth/decorators';
 
 @Controller('user')
@@ -13,19 +13,19 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
-  @Get('confirm/:token')
-  confirm(@Param('token') token: string) {
-    return this.userService.confirm(token);
+  @Patch('confirm')
+  confirm(@Body() confirmAccountDto: ConfirmAccountDto) {
+    return this.userService.confirm(confirmAccountDto);
   }
 
   @Patch('verify')
-  verifyEmail(@Body() email: VerifyEmail) {
-    return this.userService.verifyEmail(email);
+  verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    return this.userService.verifyEmail(verifyEmailDto);
   }
 
   @Patch('change-password')
-  changePassword(@Body() userData: ChangePassword) {
-    return this.userService.changePassword(userData);
+  changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    return this.userService.changePassword(changePasswordDto);
   }
 
   @Get('is-authenticated')

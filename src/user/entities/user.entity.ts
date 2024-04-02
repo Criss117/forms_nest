@@ -83,7 +83,9 @@ export class User {
   })
   updatedAt: Date;
 
-  @OneToMany(() => Folder, (folder) => folder.user)
+  @OneToMany(() => Folder, (folder) => folder.user, {
+    onDelete: 'CASCADE',
+  })
   folder: Folder[];
 
   @BeforeInsert()

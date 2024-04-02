@@ -20,10 +20,14 @@ export class Folder {
   })
   name: string;
 
-  @ManyToOne(() => User, (user) => user.folder)
+  @ManyToOne(() => User, (user) => user.folder, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
-  @OneToMany(() => Form, (forms) => forms.folder)
+  @OneToMany(() => Form, (forms) => forms.folder, {
+    onDelete: 'CASCADE',
+  })
   forms: Form[];
 
   @CreateDateColumn({

@@ -31,7 +31,16 @@ export class FolderService {
         user: { id: userId },
       });
 
-      return await this.folderRepository.save(newFolder);
+      await this.folderRepository.save(newFolder);
+
+      return {
+        statusCode: 201,
+        message: 'Folder created successfully',
+        data: {
+          ...newFolder,
+          formCount: 0,
+        },
+      };
     } catch (error) {
       handleDBErros(error, this.PATH);
     }
@@ -39,16 +48,28 @@ export class FolderService {
 
   async findManyByUserId(userId: number, paginationDto: PaginationDto) {
     const { limit = 10, offset = 0 } = paginationDto;
-    const folder = await this.folderRepository
-      .createQueryBuilder('folder')
-      .skip(offset)
-      .take(limit)
-      .orderBy('folder.createdAt', 'DESC')
-      .leftJoin('folder.forms', 'form')
-      .loadRelationCountAndMap('folder.formCount', 'folder.forms')
-      .where({ user: { id: userId } })
-      .getMany();
-    return folder;
+
+    try {
+      const folders = await this.folderRepository
+        .createQueryBuilder('folder')
+        .skip(offset)
+        .take(limit)
+        .orderBy('folder.createdAt', 'DESC')
+        .leftJoin('folder.forms', 'form')
+        .loadRelationCountAndMap('folder.formCount', 'folder.forms')
+        .where({ user: { id: userId } })
+        .getMany();
+
+      const response = {
+        statuscode: 200,
+        message: 'Folders retrieved successfully',
+        data: folders,
+      };
+
+      return response;
+    } catch (error) {
+      handleDBErros(error, this.PATH);
+    }
   }
 
   async findOne(id: string, userId: number) {
@@ -103,7 +124,7 @@ export class FolderService {
       },
     });
 
-    const maxFolders = this.userRepository.findOne({
+    const limitFolders = this.userRepository.findOne({
       where: {
         id: userId,
       },
@@ -112,18 +133,23 @@ export class FolderService {
       },
     });
 
-    await Promise.all([folders, maxFolders])
-      .then(([folders, maxFolders]) => {
-        if (folders >= maxFolders.folder_limit) {
-          throw new ForbiddenException(
-            `You have reached the maximum number of folders`,
-          );
+    let isMaxFolders: boolean;
+
+    await Promise.all([folders, limitFolders])
+      .then(([folders, limitFolders]) => {
+        if (folders >= limitFolders.folder_limit) {
+          isMaxFolders = true;
         }
       })
       .catch((error) => {
         handleDBErros(error, this.PATH);
       });
 
-    return true;
+    if (isMaxFolders) {
+      throw new ForbiddenException(
+        `You have reached the maximum number of folders`,
+      );
+    }
+    return false;
   }
 }
