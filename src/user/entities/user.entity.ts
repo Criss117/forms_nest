@@ -9,6 +9,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Folder } from '../../folder/entities/folder.entity';
+import { UserLevel } from 'src/common/utils/enums';
+import { UserFolder } from 'src/folder/user-folder/entities/user-folder.entity';
 
 @Entity('users')
 export class User {
@@ -52,15 +54,11 @@ export class User {
   })
   confirm: boolean;
 
-  @Column('int', {
-    default: 5,
+  @Column('enum', {
+    enum: UserLevel,
+    default: UserLevel.LEVEL1,
   })
-  folder_limit?: number;
-
-  @Column('int', {
-    default: 5,
-  })
-  form_limit?: number;
+  level: UserLevel;
 
   @Column('timestamp', {
     name: 'token_expiration',
@@ -87,6 +85,11 @@ export class User {
     onDelete: 'CASCADE',
   })
   folder: Folder[];
+
+  @OneToMany(() => UserFolder, (userFolder) => userFolder.user, {
+    onDelete: 'CASCADE',
+  })
+  userFolder: UserFolder[];
 
   @BeforeInsert()
   @BeforeUpdate()

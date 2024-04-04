@@ -14,14 +14,15 @@ import {
   hashpassword,
   tokenExpired,
 } from '../common/utils/functions';
-import { User } from './entities/user.entity';
-import { userSelectTypes } from './types/user-select.types';
 import {
+  ChangeLevelDto,
   ChangePasswordDto,
   ConfirmAccountDto,
   CreateUserDto,
   VerifyEmailDto,
 } from './dto';
+import { userSelectTypes } from './types/user-select.types';
+import { User } from './entities/user.entity';
 import { FolderService } from '../folder/folder.service';
 import { newUserFolder } from '../common/utils/const';
 
@@ -147,6 +148,23 @@ export class UserService {
       handleDBErros(error, this.PATH);
     }
     return { statusCode: 200, message: 'Password updated successfully' };
+  }
+
+  async changeLevel(userId: number, changeLevelDto: ChangeLevelDto) {
+    const user = await this.findOne(userId);
+    user.level = changeLevelDto.level;
+    try {
+      await this.userRepository.save(user);
+      const response = {
+        statusCode: 200,
+        message: 'User level updated successfully',
+        data: user,
+      };
+
+      return response;
+    } catch (error) {
+      handleDBErros(error, this.PATH);
+    }
   }
 
   sayHello() {

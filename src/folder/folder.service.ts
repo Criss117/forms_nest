@@ -11,6 +11,10 @@ import { CreateFolderDto, UpdateFolderDto } from './dto';
 import { handleDBErros } from '../common/utils/functions';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { User } from 'src/user/entities/user.entity';
+import { LEVEL_USER } from '../common/utils/const/level-user';
+import { UserFolderService } from './user-folder/user-folder.service';
+import { UserPermissions } from 'src/common/utils/enums';
+import { UserFolder } from './user-folder/entities/user-folder.entity';
 
 @Injectable()
 export class FolderService {
@@ -20,6 +24,9 @@ export class FolderService {
     private readonly folderRepository: Repository<Folder>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(UserFolder)
+    private readonly userFolderRepository: Repository<UserFolder>,
+    private readonly userFolderService: UserFolderService,
   ) {}
 
   async create(createFolderDto: CreateFolderDto, userId: number) {
@@ -28,10 +35,16 @@ export class FolderService {
     try {
       const newFolder = this.folderRepository.create({
         ...createFolderDto,
-        user: { id: userId },
+        user: { id: 0 },
       });
 
       await this.folderRepository.save(newFolder);
+
+      await this.userFolderService.create({
+        userId,
+        folderId: newFolder.id,
+        permission: UserPermissions.OWNER,
+      });
 
       return {
         statusCode: 201,
@@ -50,20 +63,29 @@ export class FolderService {
     const { limit = 10, offset = 0 } = paginationDto;
 
     try {
-      const folders = await this.folderRepository
-        .createQueryBuilder('folder')
+      const folders = await this.userFolderRepository
+        .createQueryBuilder('userFolder')
         .skip(offset)
         .take(limit)
+        .innerJoinAndSelect(
+          'userFolder.folder',
+          'folder',
+          'folder.id = userFolder.folderId',
+        )
         .orderBy('folder.createdAt', 'DESC')
-        .leftJoin('folder.forms', 'form')
+        .leftJoin('folder.forms', 'form', 'form.folderId = folder.id')
         .loadRelationCountAndMap('folder.formCount', 'folder.forms')
         .where({ user: { id: userId } })
         .getMany();
 
+      const data = folders.map((info) => {
+        return info.folder;
+      });
+
       const response = {
         statuscode: 200,
         message: 'Folders retrieved successfully',
-        data: folders,
+        data,
       };
 
       return response;
@@ -83,7 +105,13 @@ export class FolderService {
 
     if (!folder) throw new ForbiddenException('Unauthorized user');
 
-    return folder;
+    const response = {
+      statuscode: 200,
+      message: 'Folder retrieved successfully',
+      data: folder,
+    };
+
+    return response;
   }
 
   async update(id: string, updateFolderDto: UpdateFolderDto, userId: number) {
@@ -124,20 +152,20 @@ export class FolderService {
       },
     });
 
-    const limitFolders = this.userRepository.findOne({
+    const userInfo = this.userRepository.findOne({
       where: {
         id: userId,
       },
       select: {
-        folder_limit: true,
+        level: true,
       },
     });
 
     let isMaxFolders: boolean;
 
-    await Promise.all([folders, limitFolders])
-      .then(([folders, limitFolders]) => {
-        if (folders >= limitFolders.folder_limit) {
+    await Promise.all([folders, userInfo])
+      .then(([folders, userInfo]) => {
+        if (folders >= LEVEL_USER[userInfo.level].folderLimit) {
           isMaxFolders = true;
         }
       })

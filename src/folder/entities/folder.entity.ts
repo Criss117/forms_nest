@@ -9,6 +9,7 @@ import {
   Entity,
   OneToMany,
 } from 'typeorm';
+import { UserFolder } from '../user-folder/entities/user-folder.entity';
 
 @Entity('folders')
 export class Folder {
@@ -50,4 +51,9 @@ export class Folder {
     default: 1,
   })
   active: boolean;
+
+  @OneToMany(() => UserFolder, (userFolder) => userFolder.folder, {
+    onDelete: 'CASCADE',
+  })
+  userFolder: UserFolder[];
 }

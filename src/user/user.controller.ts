@@ -1,8 +1,13 @@
 import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ConfirmAccountDto, CreateUserDto, VerifyEmailDto } from './dto';
+import {
+  ChangeLevelDto,
+  ConfirmAccountDto,
+  CreateUserDto,
+  VerifyEmailDto,
+} from './dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { Auth } from '../auth/decorators';
+import { Auth, GetUser } from '../auth/decorators';
 
 @Controller('user')
 export class UserController {
@@ -26,6 +31,15 @@ export class UserController {
   @Patch('change-password')
   changePassword(@Body() changePasswordDto: ChangePasswordDto) {
     return this.userService.changePassword(changePasswordDto);
+  }
+
+  @Patch('change-level')
+  @Auth()
+  changeLevel(
+    @Body() changeLevelDto: ChangeLevelDto,
+    @GetUser('id') userId: number,
+  ) {
+    return this.userService.changeLevel(userId, changeLevelDto);
   }
 
   @Get('is-authenticated')

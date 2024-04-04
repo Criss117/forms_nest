@@ -6,7 +6,7 @@ export class CreateFormDto {
 
   @IsString()
   @MinLength(5)
-  @MaxLength(100)
+  @MaxLength(50)
   name: string;
 
   @IsString()
