@@ -8,7 +8,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Folder } from '../../folder/entities/folder.entity';
 import { UserLevel } from 'src/common/utils/enums';
 import { UserFolder } from 'src/folder/user-folder/entities/user-folder.entity';
 
@@ -80,11 +79,6 @@ export class User {
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt: Date;
-
-  @OneToMany(() => Folder, (folder) => folder.user, {
-    onDelete: 'CASCADE',
-  })
-  folder: Folder[];
 
   @OneToMany(() => UserFolder, (userFolder) => userFolder.user, {
     onDelete: 'CASCADE',

@@ -1,11 +1,9 @@
 import { Form } from '../../form/entities/form.entity';
-import { User } from '../../user/entities/user.entity';
 import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
   Entity,
   OneToMany,
 } from 'typeorm';
@@ -20,11 +18,6 @@ export class Folder {
     length: 30,
   })
   name: string;
-
-  @ManyToOne(() => User, (user) => user.folder, {
-    onDelete: 'CASCADE',
-  })
-  user: User;
 
   @OneToMany(() => Form, (forms) => forms.folder, {
     onDelete: 'CASCADE',

@@ -13,6 +13,7 @@ import { CreateFolderDto, UpdateFolderDto } from './dto';
 import { FolderService } from './folder.service';
 import { Auth, GetUser } from '../auth/decorators';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { FindManyDto } from './dto/find-many.dto';
 
 @Controller('folder')
 export class FolderController {
@@ -32,8 +33,13 @@ export class FolderController {
   findManyByUserId(
     @GetUser('id') userId: number,
     @Query() paginationDto: PaginationDto,
+    @Body() findManyDto: FindManyDto,
   ) {
-    return this.folderService.findManyByUserId(userId, paginationDto);
+    return this.folderService.findManyByUserId(
+      userId,
+      paginationDto,
+      findManyDto.owner,
+    );
   }
 
   @Get(':id')
@@ -55,12 +61,12 @@ export class FolderController {
     return this.folderService.update(id, updateFolderDto, userId);
   }
 
-  @Delete(':id')
-  @Auth()
-  delete(
-    @GetUser('id') userId: number,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.folderService.delete(id, userId);
-  }
+  // @Delete(':id')
+  // @Auth()
+  // delete(
+  //   @GetUser('id') userId: number,
+  //   @Param('id', ParseUUIDPipe) id: string,
+  // ) {
+  //   return this.folderService.delete(id, userId);
+  // }
 }

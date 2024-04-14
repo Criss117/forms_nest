@@ -80,7 +80,9 @@ export class FormService {
       },
       relations: {
         folder: {
-          user: true,
+          userFolder: {
+            user: true,
+          },
         },
       },
     });
@@ -91,9 +93,12 @@ export class FormService {
       throw new NotFoundException('Form not found');
     }
 
-    if (form.folder.user.id !== userId) {
-      throw new UnauthorizedException('Unauthorized user');
-    }
+    console.log({ form });
+    return;
+
+    // if (form.folder.user.id !== userId) {
+    //   throw new UnauthorizedException('Unauthorized user');
+    // }
 
     form.active = false;
 

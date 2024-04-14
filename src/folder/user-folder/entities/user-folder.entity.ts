@@ -29,6 +29,9 @@ export class UserFolder {
   @Column({ type: 'enum', enum: UserPermissions })
   permissions: UserPermissions;
 
+  @Column({ default: true })
+  owner: boolean;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'datetime',

@@ -14,7 +14,6 @@ import { User } from 'src/user/entities/user.entity';
 import { LEVEL_USER } from '../common/utils/const/level-user';
 import { UserFolderService } from './user-folder/user-folder.service';
 import { UserPermissions } from 'src/common/utils/enums';
-import { UserFolder } from './user-folder/entities/user-folder.entity';
 
 @Injectable()
 export class FolderService {
@@ -24,8 +23,6 @@ export class FolderService {
     private readonly folderRepository: Repository<Folder>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(UserFolder)
-    private readonly userFolderRepository: Repository<UserFolder>,
     private readonly userFolderService: UserFolderService,
   ) {}
 
@@ -35,7 +32,6 @@ export class FolderService {
     try {
       const newFolder = this.folderRepository.create({
         ...createFolderDto,
-        user: { id: 0 },
       });
 
       await this.folderRepository.save(newFolder);
@@ -43,7 +39,7 @@ export class FolderService {
       await this.userFolderService.create({
         userId,
         folderId: newFolder.id,
-        permission: UserPermissions.OWNER,
+        permission: UserPermissions.ALL,
       });
 
       return {
@@ -59,33 +55,22 @@ export class FolderService {
     }
   }
 
-  async findManyByUserId(userId: number, paginationDto: PaginationDto) {
-    const { limit = 10, offset = 0 } = paginationDto;
-
+  async findManyByUserId(
+    userId: number,
+    paginationDto: PaginationDto,
+    owner: boolean = true,
+  ) {
     try {
-      const folders = await this.userFolderRepository
-        .createQueryBuilder('userFolder')
-        .skip(offset)
-        .take(limit)
-        .innerJoinAndSelect(
-          'userFolder.folder',
-          'folder',
-          'folder.id = userFolder.folderId',
-        )
-        .orderBy('folder.createdAt', 'DESC')
-        .leftJoin('folder.forms', 'form', 'form.folderId = folder.id')
-        .loadRelationCountAndMap('folder.formCount', 'folder.forms')
-        .where({ user: { id: userId } })
-        .getMany();
-
-      const data = folders.map((info) => {
-        return info.folder;
-      });
+      const folders = await this.userFolderService.findAllByUserId(
+        userId,
+        paginationDto,
+        owner,
+      );
 
       const response = {
         statuscode: 200,
         message: 'Folders retrieved successfully',
-        data,
+        data: folders,
       };
 
       return response;
@@ -95,16 +80,7 @@ export class FolderService {
   }
 
   async findOne(id: string, userId: number) {
-    const folder = await this.folderRepository
-      .createQueryBuilder('folder')
-      .leftJoinAndSelect('folder.forms', 'form', 'form.active = :active', {
-        active: true,
-      })
-      .where({ id, user: { id: userId } })
-      .getOne();
-
-    if (!folder) throw new ForbiddenException('Unauthorized user');
-
+    const folder = await this.userFolderService.findOne(id, userId);
     const response = {
       statuscode: 200,
       message: 'Folder retrieved successfully',
@@ -115,6 +91,12 @@ export class FolderService {
   }
 
   async update(id: string, updateFolderDto: UpdateFolderDto, userId: number) {
+    const canUpdate = await this.userFolderService.canUpdate(id, userId);
+
+    if (!canUpdate) {
+      throw new ForbiddenException('You can not update this folder');
+    }
+
     const folder = await this.findOne(id, userId);
     const newFolder = {
       ...folder,
@@ -128,10 +110,9 @@ export class FolderService {
     }
   }
 
-  async delete(id: string, userId: number) {
+  async delete(id: string) {
     const folder = await this.folderRepository.preload({
       id,
-      user: { id: userId },
     });
     if (!folder) throw new NotFoundException('Folder not found');
     try {
@@ -146,8 +127,10 @@ export class FolderService {
   async verifyUserFolderLimit(userId: number) {
     const folders = this.folderRepository.count({
       where: {
-        user: {
-          id: userId,
+        userFolder: {
+          user: {
+            id: userId,
+          },
         },
       },
     });
