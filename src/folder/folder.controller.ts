@@ -7,13 +7,12 @@ import {
   Patch,
   Param,
   ParseUUIDPipe,
-  Delete,
 } from '@nestjs/common';
 import { CreateFolderDto, UpdateFolderDto } from './dto';
 import { FolderService } from './folder.service';
 import { Auth, GetUser } from '../auth/decorators';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { FindManyDto } from './dto/find-many.dto';
+import { CreateUserFolderDto } from './user-folder/dto/create-user-folder.dto';
 
 @Controller('folder')
 export class FolderController {
@@ -33,13 +32,8 @@ export class FolderController {
   findManyByUserId(
     @GetUser('id') userId: number,
     @Query() paginationDto: PaginationDto,
-    @Body() findManyDto: FindManyDto,
   ) {
-    return this.folderService.findManyByUserId(
-      userId,
-      paginationDto,
-      findManyDto.owner,
-    );
+    return this.folderService.findManyByUserId(userId, paginationDto);
   }
 
   @Get(':id')
@@ -61,12 +55,12 @@ export class FolderController {
     return this.folderService.update(id, updateFolderDto, userId);
   }
 
-  // @Delete(':id')
-  // @Auth()
-  // delete(
-  //   @GetUser('id') userId: number,
-  //   @Param('id', ParseUUIDPipe) id: string,
-  // ) {
-  //   return this.folderService.delete(id, userId);
-  // }
+  @Post('add-members')
+  @Auth()
+  addMembers(
+    @Body() addMembers: CreateUserFolderDto,
+    @GetUser('id') userId: number,
+  ) {
+    return this.folderService.addMembers(addMembers, userId);
+  }
 }

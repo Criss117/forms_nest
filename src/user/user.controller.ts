@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
   ChangeLevelDto,
@@ -8,6 +8,7 @@ import {
 } from './dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { Auth, GetUser } from '../auth/decorators';
+import { FindUsersDto } from './dto/find-users.dto';
 
 @Controller('user')
 export class UserController {
@@ -42,9 +43,12 @@ export class UserController {
     return this.userService.changeLevel(userId, changeLevelDto);
   }
 
-  @Get('is-authenticated')
+  @Get('/find-users')
   @Auth()
-  isAuthenticated() {
-    return true;
+  findUsersByParameter(
+    @Query() findUsersDto: FindUsersDto,
+    @GetUser('id') userId: number,
+  ) {
+    return this.userService.findUsersByEmail(findUsersDto, userId);
   }
 }

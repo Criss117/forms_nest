@@ -25,6 +25,7 @@ import { userSelectTypes } from './types/user-select.types';
 import { User } from './entities/user.entity';
 import { FolderService } from '../folder/folder.service';
 import { newUserFolder } from '../common/utils/const';
+import { FindUsersDto } from './dto/find-users.dto';
 
 @Injectable()
 export class UserService {
@@ -159,6 +160,30 @@ export class UserService {
         statusCode: 200,
         message: 'User level updated successfully',
         data: user,
+      };
+
+      return response;
+    } catch (error) {
+      handleDBErros(error, this.PATH);
+    }
+  }
+
+  async findUsersByEmail(findUsersDto: FindUsersDto, userId: number) {
+    const { query } = findUsersDto;
+
+    try {
+      const users = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.id != :id', { id: userId })
+        .andWhere(`user.name LIKE :query`, { query: `%${query}%` })
+        .orWhere('user.email LIKE :query', { query: `%${query}%` })
+        .orWhere('user.surname LIKE :query', { query: `%${query}%` })
+        .getMany();
+
+      const response = {
+        statusCode: 200,
+        message: 'Users retrieved successfully',
+        data: users.filter((user) => user.id !== userId),
       };
 
       return response;

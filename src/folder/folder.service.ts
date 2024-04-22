@@ -14,6 +14,7 @@ import { User } from 'src/user/entities/user.entity';
 import { LEVEL_USER } from '../common/utils/const/level-user';
 import { UserFolderService } from './user-folder/user-folder.service';
 import { UserPermissions } from 'src/common/utils/enums';
+import { CreateUserFolderDto } from './user-folder/dto/create-user-folder.dto';
 
 @Injectable()
 export class FolderService {
@@ -55,16 +56,11 @@ export class FolderService {
     }
   }
 
-  async findManyByUserId(
-    userId: number,
-    paginationDto: PaginationDto,
-    owner: boolean = true,
-  ) {
+  async findManyByUserId(userId: number, paginationDto: PaginationDto) {
     try {
       const folders = await this.userFolderService.findAllByUserId(
         userId,
         paginationDto,
-        owner,
       );
 
       const response = {
@@ -75,6 +71,7 @@ export class FolderService {
 
       return response;
     } catch (error) {
+      console.log(error);
       handleDBErros(error, this.PATH);
     }
   }
@@ -90,14 +87,21 @@ export class FolderService {
     return response;
   }
 
-  async update(id: string, updateFolderDto: UpdateFolderDto, userId: number) {
-    const canUpdate = await this.userFolderService.canUpdate(id, userId);
+  async update(
+    folderId: string,
+    updateFolderDto: UpdateFolderDto,
+    userId: number,
+  ) {
+    const folderPermissions = await this.userFolderService.hasPermissions(
+      userId,
+      folderId,
+    );
 
-    if (!canUpdate) {
+    if (!folderPermissions.isOwner || !folderPermissions.canUpdate) {
       throw new ForbiddenException('You can not update this folder');
     }
 
-    const folder = await this.findOne(id, userId);
+    const folder = await this.findOne(folderId, userId);
     const newFolder = {
       ...folder,
       ...updateFolderDto,
@@ -162,5 +166,41 @@ export class FolderService {
       );
     }
     return false;
+  }
+
+  async addMembers(addMembers: CreateUserFolderDto, userId: number) {
+    const { userId: memberId, folderId, permission } = addMembers;
+
+    if (userId === memberId) {
+      throw new ForbiddenException('You can not add yourself as member');
+    }
+
+    const exists = await this.userFolderService.exists(memberId, folderId);
+
+    if (exists) {
+      throw new ForbiddenException('Member already exists');
+    }
+
+    const folderPermissions = await this.userFolderService.hasPermissions(
+      userId,
+      folderId,
+    );
+
+    if (!folderPermissions.isOwner) {
+      throw new ForbiddenException('You can not add members to this folder');
+    }
+
+    try {
+      return await this.userFolderService.create(
+        {
+          userId: memberId,
+          folderId,
+          permission,
+        },
+        false,
+      );
+    } catch (error) {
+      handleDBErros(error, this.PATH);
+    }
   }
 }

@@ -7,6 +7,7 @@ import { UserFolder } from './entities/user-folder.entity';
 import { handleDBErros } from 'src/common/utils/functions';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { UserPermissions } from 'src/common/utils/enums';
+import { UserFolders } from './interfaces/folders';
 
 @Injectable()
 export class UserFolderService {
@@ -16,7 +17,7 @@ export class UserFolderService {
     private userFolderRepository: Repository<UserFolder>,
   ) {}
 
-  async create(createUserFolderDto: CreateUserFolderDto) {
+  async create(createUserFolderDto: CreateUserFolderDto, owner = true) {
     try {
       const newUserFolder = this.userFolderRepository.create({
         user: {
@@ -26,6 +27,7 @@ export class UserFolderService {
           id: createUserFolderDto.folderId,
         },
         permissions: createUserFolderDto.permission,
+        owner,
       });
 
       await this.userFolderRepository.save(newUserFolder);
@@ -49,11 +51,7 @@ export class UserFolderService {
     }
   }
 
-  async findAllByUserId(
-    userId: number,
-    paginationDto: PaginationDto,
-    owner = true,
-  ) {
+  async findAllByUserId(userId: number, paginationDto: PaginationDto) {
     const { limit, offset } = paginationDto;
 
     try {
@@ -74,49 +72,92 @@ export class UserFolderService {
         )
         .orderBy('folder.createdAt', 'DESC')
         .where({ user: { id: userId } })
-        .andWhere({ owner })
         .getMany();
 
-      const data = folders.map((info) => {
-        return info.folder;
+      const ownerFolders: UserFolders[] = [];
+      const sharedFolders: UserFolders[] = [];
+
+      console.log({ folders });
+
+      folders.forEach((info) => {
+        if (info.owner) {
+          ownerFolders.push({ ...info.folder, owner: info.owner });
+        } else {
+          sharedFolders.push({ ...info.folder, owner: info.owner });
+        }
       });
 
-      return data;
+      return {
+        ownerFolders,
+        sharedFolders,
+      };
     } catch (error) {
       handleDBErros(error, this.PATH);
     }
   }
 
   async findOne(folderId: string, userId: number) {
-    try {
-      const folderFound = await this.userFolderRepository
+    const folderFound = await this.userFolderRepository
+      .createQueryBuilder('userFolder')
+      .innerJoinAndSelect('userFolder.user', 'user')
+      .innerJoinAndSelect(
+        'userFolder.folder',
+        'folder',
+        'folder.id = userFolder.folderId',
+      )
+      .leftJoinAndSelect(
+        'folder.forms',
+        'form',
+        'form.active = :active AND form.folderId = folder.id',
+        {
+          active: true,
+        },
+      )
+      .where({
+        folder: { id: folderId },
+      })
+      .andWhere({ user: { id: userId } })
+      .getOne();
+
+    if (!folderFound) throw new NotFoundException('Folder not found');
+
+    if (!folderFound.owner) {
+      const owner = await this.userFolderRepository
         .createQueryBuilder('userFolder')
-        .innerJoinAndSelect(
-          'userFolder.folder',
-          'folder',
-          'folder.id = userFolder.folderId',
-        )
-        .leftJoinAndSelect(
-          'folder.forms',
-          'form',
-          'form.active = :active AND form.folderId = folder.id',
-          {
-            active: true,
-          },
-        )
-        .where({
-          folder: { id: folderId },
-        })
-        .andWhere({ user: { id: userId } })
+        .innerJoinAndSelect('userFolder.user', 'user')
+        .where({ folder: { id: folderId } })
+        .andWhere({ owner: true })
         .getOne();
 
-      return folderFound.folder;
-    } catch (error) {
-      handleDBErros(error, this.PATH);
+      return {
+        ...folderFound.folder,
+        owner: folderFound.owner,
+        ownerUser: {
+          id: owner.user.id,
+          name: owner.user.name,
+          email: owner.user.email,
+          surname: owner.user.surname,
+        },
+      };
     }
+
+    return { ...folderFound.folder, owner: folderFound.owner };
   }
 
-  async canUpdate(folderId: string, userId: number) {
+  async exists(userId: number, folderId: string) {
+    const userFolder = await this.userFolderRepository.findOne({
+      where: {
+        folder: { id: folderId },
+        user: { id: userId },
+      },
+    });
+
+    if (!userFolder) return false;
+
+    return true;
+  }
+
+  async hasPermissions(userId: number, folderId: string) {
     const userFolder = await this.userFolderRepository.findOne({
       where: {
         folder: { id: folderId },
@@ -126,18 +167,12 @@ export class UserFolderService {
 
     if (!userFolder) throw new NotFoundException('UserFolder not found');
 
-    const { owner, permissions } = userFolder;
+    const response = {
+      isOwner: userFolder.owner,
+      canUpdate: userFolder.permissions === UserPermissions.ALL,
+    };
 
-    if (owner) return true;
-
-    if (
-      permissions === UserPermissions.ALL ||
-      permissions === UserPermissions.WRITE
-    ) {
-      return true;
-    }
-
-    return false;
+    return response;
   }
 
   remove(id: number) {
