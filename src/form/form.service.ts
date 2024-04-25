@@ -93,7 +93,6 @@ export class FormService {
       throw new NotFoundException('Form not found');
     }
 
-    console.log({ form });
     return;
 
     // if (form.folder.user.id !== userId) {

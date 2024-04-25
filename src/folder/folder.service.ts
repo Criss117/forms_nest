@@ -40,7 +40,7 @@ export class FolderService {
       await this.userFolderService.create({
         userId,
         folderId: newFolder.id,
-        permission: UserPermissions.ALL,
+        permission: UserPermissions.READ_WRITE,
       });
 
       return {
@@ -71,7 +71,6 @@ export class FolderService {
 
       return response;
     } catch (error) {
-      console.log(error);
       handleDBErros(error, this.PATH);
     }
   }

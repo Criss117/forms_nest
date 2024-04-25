@@ -1,4 +1,4 @@
 export enum UserPermissions {
-  'READ' = 1,
-  'ALL' = 2,
+  READ,
+  READ_WRITE,
 }

@@ -8,6 +8,7 @@ import { handleDBErros } from 'src/common/utils/functions';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { UserPermissions } from 'src/common/utils/enums';
 import { UserFolders } from './interfaces/folders';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class UserFolderService {
@@ -77,8 +78,6 @@ export class UserFolderService {
       const ownerFolders: UserFolders[] = [];
       const sharedFolders: UserFolders[] = [];
 
-      console.log({ folders });
-
       folders.forEach((info) => {
         if (info.owner) {
           ownerFolders.push({ ...info.folder, owner: info.owner });
@@ -121,6 +120,30 @@ export class UserFolderService {
 
     if (!folderFound) throw new NotFoundException('Folder not found');
 
+    const membersFound = await this.userFolderRepository.find({
+      where: {
+        folder: { id: folderId },
+        owner: false,
+      },
+      relations: ['user'],
+      select: {
+        user: {
+          id: true,
+          name: true,
+          email: true,
+          surname: true,
+        },
+      },
+    });
+
+    const members: User[] = [];
+
+    if (membersFound) {
+      membersFound.forEach((member) => {
+        members.push(member.user);
+      });
+    }
+
     if (!folderFound.owner) {
       const owner = await this.userFolderRepository
         .createQueryBuilder('userFolder')
@@ -138,10 +161,11 @@ export class UserFolderService {
           email: owner.user.email,
           surname: owner.user.surname,
         },
+        members,
       };
     }
 
-    return { ...folderFound.folder, owner: folderFound.owner };
+    return { ...folderFound.folder, owner: folderFound.owner, members };
   }
 
   async exists(userId: number, folderId: string) {
@@ -169,7 +193,7 @@ export class UserFolderService {
 
     const response = {
       isOwner: userFolder.owner,
-      canUpdate: userFolder.permissions === UserPermissions.ALL,
+      canUpdate: userFolder.permissions === UserPermissions.READ_WRITE,
     };
 
     return response;

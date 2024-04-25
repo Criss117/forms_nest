@@ -112,7 +112,6 @@ export class UserService {
 
     user.token = generateToken();
     user.tokenExpiration = new Date(Date.now() + 1000 * 60 * 10);
-    console.log({ token: user.tokenExpiration });
 
     await this.userRepository.save(user);
     return {
