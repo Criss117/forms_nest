@@ -14,7 +14,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-class QuestionDto {
+export class QuestionDto {
   @IsUUID()
   formId: string;
 
@@ -30,10 +30,9 @@ class QuestionDto {
   subtypeId: number;
 }
 
-class AnswerDto {
+export class AnswerDto {
   @IsNumber()
-  @IsOptional()
-  id?: number;
+  id: number;
 
   @IsString()
   @MaxLength(255)

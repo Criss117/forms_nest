@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Question } from './entities/question.entity';
-import { Repository } from 'typeorm';
 import { handleDBErros } from 'src/common/utils/functions';
+import { AnswersService } from './answers.service';
 import { Answer } from './entities/answer.entity';
 
 @Injectable()
@@ -13,45 +19,43 @@ export class QuestionsService {
   constructor(
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
-    @InjectRepository(Answer)
-    private readonly answerRepository: Repository<Answer>,
+    private readonly answerService: AnswersService,
   ) {}
 
   async create(createQuestionDto: CreateQuestionDto) {
     const { question, answers } = createQuestionDto;
 
+    const { formId, subtypeId, ...restQuestion } = question;
+
+    const newQuestion = this.questionRepository.create({
+      ...restQuestion,
+      form: { id: formId },
+      subtype: { id: subtypeId },
+    });
+
+    if (!newQuestion) throw new BadRequestException('Question not created');
+
+    let questionCreated: Question;
+
     try {
-      const { formId, subtypeId, ...restQuestion } = question;
-      const newQuestion = this.questionRepository.create({
-        ...restQuestion,
-        form: { id: formId },
-        subtype: { id: subtypeId },
-      });
-
-      const questionCreated = await this.questionRepository.save(newQuestion);
-
-      if (!questionCreated) throw new Error('Question not created');
-
-      const answerPromise: Promise<Answer>[] = [];
-
-      if (!answers) {
-        return { questionId: questionCreated.id };
-      }
-
-      answers.forEach(async (answer) => {
-        const newAnswer = this.answerRepository.create({
-          ...answer,
-          question: { id: questionCreated.id },
-        });
-        answerPromise.push(this.answerRepository.save(newAnswer));
-      });
-
-      await Promise.all(answerPromise);
-
-      return { questionId: questionCreated.id };
+      questionCreated = await this.questionRepository.save(newQuestion);
     } catch (error) {
       handleDBErros(error, this.PATH);
     }
+
+    if (!answers) {
+      return { statusCode: 200, message: 'Question created successfully' };
+    }
+
+    const answerPromise: Promise<Answer>[] = [];
+
+    answers.forEach(async (answer) => {
+      answerPromise.push(this.answerService.create(answer, questionCreated.id));
+    });
+
+    await Promise.all(answerPromise);
+
+    return { statusCode: 200, message: 'Question created successfully' };
   }
 
   async findAllbyFormId(formId: string) {
@@ -87,34 +91,34 @@ export class QuestionsService {
 
     if (!answers) return { questionId: questionUpdated.id };
 
-    const answerPromise: Promise<Answer>[] = [];
+    // const answerPromise: Promise<Answer>[] = [];
 
-    answers.forEach(async (answer) => {
-      if (!answer.id) {
-        const answerUpdated = this.answerRepository.create({
-          ...answer,
-          question: { id: questionUpdated.id },
-        });
-        answerPromise.push(this.answerRepository.save(answerUpdated));
-      }
-      if (answer.id && answer.id > 0) {
-        const answerUpdated = await this.answerRepository.preload({
-          id: answer.id,
-          ...answer,
-        });
-        answerPromise.push(this.answerRepository.save(answerUpdated));
-      }
-      if (answer.id && answer.id < 0) {
-        const answerUpdated = await this.answerRepository.preload({
-          id: answer.id * -1,
-          active: false,
-        });
-        answerPromise.push(this.answerRepository.save(answerUpdated));
-      }
-    });
+    // answers.forEach(async (answer) => {
+    //   if (!answer.id) {
+    //     const answerUpdated = this.answerRepository.create({
+    //       ...answer,
+    //       question: { id: questionUpdated.id },
+    //     });
+    //     answerPromise.push(this.answerRepository.save(answerUpdated));
+    //   }
+    //   if (answer.id && answer.id > 0) {
+    //     const answerUpdated = await this.answerRepository.preload({
+    //       id: answer.id,
+    //       ...answer,
+    //     });
+    //     answerPromise.push(this.answerRepository.save(answerUpdated));
+    //   }
+    //   if (answer.id && answer.id < 0) {
+    //     const answerUpdated = await this.answerRepository.preload({
+    //       id: answer.id * -1,
+    //       active: false,
+    //     });
+    //     answerPromise.push(this.answerRepository.save(answerUpdated));
+    //   }
+    // });
 
     try {
-      await Promise.all(answerPromise);
+      // await Promise.all(answerPromise);
       return { questionId: questionUpdated.id };
     } catch (error) {
       handleDBErros(error, this.PATH);
@@ -135,29 +139,29 @@ export class QuestionsService {
       handleDBErros(error, this.PATH);
     }
 
-    const answers = await this.answerRepository.find({
-      where: {
-        question: {
-          id,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
+    // const answers = await this.answerRepository.find({
+    //   where: {
+    //     question: {
+    //       id,
+    //     },
+    //   },
+    //   select: {
+    //     id: true,
+    //   },
+    // });
 
-    const answerPromise: Promise<Answer>[] = [];
+    // const answerPromise: Promise<Answer>[] = [];
 
-    answers.forEach(async (answer) => {
-      const answerUpdated = await this.answerRepository.preload({
-        id: answer.id,
-        active: false,
-      });
-      answerPromise.push(this.answerRepository.save(answerUpdated));
-    });
+    // answers.forEach(async (answer) => {
+    //   const answerUpdated = await this.answerRepository.preload({
+    //     id: answer.id,
+    //     active: false,
+    //   });
+    //   answerPromise.push(this.answerRepository.save(answerUpdated));
+    // });
 
     try {
-      await Promise.all(answerPromise);
+      // await Promise.all(answerPromise);
       return { questionId: question.id };
     } catch (error) {
       handleDBErros(error, this.PATH);

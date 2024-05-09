@@ -7,6 +7,7 @@ import { MYSQL_ERRORS } from '../enums';
 
 export function handleDBErros(error: any, entity: string): never {
   const logger = new Logger(entity);
+
   if (Object.values(MYSQL_ERRORS).includes(error.errno)) {
     throw new BadRequestException({
       message: error.sqlMessage,
@@ -17,6 +18,8 @@ export function handleDBErros(error: any, entity: string): never {
       statusCode: 400,
     });
   }
+
   logger.log(error);
+
   throw new InternalServerErrorException('please check server logs');
 }

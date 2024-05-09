@@ -1,9 +1,10 @@
+import { Repository } from 'typeorm';
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Type } from './entities/type.entity';
 import { SubType } from './entities/sub-types.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class TypeService {
@@ -15,10 +16,16 @@ export class TypeService {
   ) {}
 
   async findAll() {
-    return await this.typeRepository.find({
+    const types = await this.typeRepository.find({
       relations: {
         subTypes: true,
       },
     });
+
+    return {
+      statusCode: 200,
+      message: 'Types retrieved successfully',
+      data: types,
+    };
   }
 }

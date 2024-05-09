@@ -133,14 +133,15 @@ export class UserFolderService {
           email: true,
           surname: true,
         },
+        permissions: true,
       },
     });
 
-    const members: User[] = [];
+    const members: Array<User> = [];
 
     if (membersFound) {
-      membersFound.forEach((member) => {
-        members.push(member.user);
+      membersFound.forEach(({ user }) => {
+        members.push(user);
       });
     }
 
@@ -155,6 +156,7 @@ export class UserFolderService {
       return {
         ...folderFound.folder,
         owner: folderFound.owner,
+        permission: folderFound.permissions,
         ownerUser: {
           id: owner.user.id,
           name: owner.user.name,
@@ -165,7 +167,12 @@ export class UserFolderService {
       };
     }
 
-    return { ...folderFound.folder, owner: folderFound.owner, members };
+    return {
+      ...folderFound.folder,
+      permission: folderFound.permissions,
+      owner: folderFound.owner,
+      members,
+    };
   }
 
   async exists(userId: number, folderId: string) {
