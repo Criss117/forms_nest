@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -10,6 +6,7 @@ import { Form } from './entities/form.entity';
 import { CreateFormDto } from './dto/create-form.dto';
 import { FolderService } from '../folder/folder.service';
 import { handleDBErros } from '../common/utils/functions';
+import { HasPermissions } from 'src/folder/user-folder/interfaces/has-permisions';
 
 @Injectable()
 export class FormService {
@@ -47,7 +44,7 @@ export class FormService {
     return `This action returns all form`;
   }
 
-  async findOne(id: string) {
+  async findOne(formId: string, userPermisions: HasPermissions) {
     const form = await this.formRepository
       .createQueryBuilder('form')
       .leftJoinAndSelect(
@@ -67,10 +64,18 @@ export class FormService {
         },
       )
       .leftJoinAndSelect('question.subtype', 'subtype')
-      .where('form.id = :id', { id })
+      .where('form.id = :formId', { formId })
       .getOne();
 
-    return form;
+    return {
+      statusCode: 200,
+      message: 'Form found successfully',
+      data: {
+        ...form,
+        owner: userPermisions.isOwner,
+        permission: userPermisions.permissions,
+      },
+    };
   }
 
   async remove(id: string, userId: number) {

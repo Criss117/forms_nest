@@ -96,7 +96,7 @@ export class FolderService {
       folderId,
     );
 
-    if (!folderPermissions.isOwner || !folderPermissions.canUpdate) {
+    if (!folderPermissions.isOwner || !folderPermissions.canMutate) {
       throw new ForbiddenException('You can not update this folder');
     }
 

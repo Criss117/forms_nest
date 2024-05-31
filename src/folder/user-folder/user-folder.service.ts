@@ -9,6 +9,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { UserPermissions } from 'src/common/utils/enums';
 import { UserFolders } from './interfaces/folders';
 import { User } from 'src/user/entities/user.entity';
+import { HasPermissions } from './interfaces/has-permisions';
 
 @Injectable()
 export class UserFolderService {
@@ -188,7 +189,10 @@ export class UserFolderService {
     return true;
   }
 
-  async hasPermissions(userId: number, folderId: string) {
+  async hasPermissions(
+    userId: number,
+    folderId: string,
+  ): Promise<HasPermissions> {
     const userFolder = await this.userFolderRepository.findOne({
       where: {
         folder: { id: folderId },
@@ -199,8 +203,12 @@ export class UserFolderService {
     if (!userFolder) throw new NotFoundException('UserFolder not found');
 
     const response = {
+      userId,
+      folderId,
       isOwner: userFolder.owner,
-      canUpdate: userFolder.permissions === UserPermissions.READ_WRITE,
+      canRead: userFolder.permissions === UserPermissions.READ_WRITE,
+      canMutate: userFolder.permissions === UserPermissions.READ_WRITE,
+      permissions: userFolder.permissions,
     };
 
     return response;

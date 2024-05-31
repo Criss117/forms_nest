@@ -55,7 +55,10 @@ export class QuestionsService {
 
     await Promise.all(answerPromise);
 
-    return { statusCode: 200, message: 'Question created successfully' };
+    return {
+      statusCode: 200,
+      message: 'Question created successfully',
+    };
   }
 
   async findAllbyFormId(formId: string) {

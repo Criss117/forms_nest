@@ -2,21 +2,29 @@ import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { FormService } from './form.service';
 import { CreateFormDto } from './dto/create-form.dto';
 import { Auth, GetUser } from '../auth/decorators';
+import { GetPermissions } from 'src/folder/decorators/get-permisions.decorator';
+import { HasPermissions } from 'src/folder/user-folder/interfaces/has-permisions';
 
-@Controller('form')
+@Controller('folder/:folderId/form')
 export class FormController {
   constructor(private readonly formService: FormService) {}
 
-  @Post()
+  @Post('')
   @Auth()
   create(@Body() createFormDto: CreateFormDto, @GetUser('id') userId: number) {
     return this.formService.create(createFormDto, userId);
   }
 
-  @Get(':id')
+  @Get('/:formId')
   @Auth()
-  findOne(@Param('id') id: string) {
-    return this.formService.findOne(id);
+  @GetPermissions()
+  findOne(
+    @GetUser('id') userId: number,
+    @Param('folderId') folderId: string,
+    @Param('formId') formId: string,
+    permissions: HasPermissions,
+  ) {
+    return this.formService.findOne(formId, permissions);
   }
 
   @Delete(':id')
