@@ -7,6 +7,8 @@ import {
   Patch,
   Param,
   ParseUUIDPipe,
+  Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CreateFolderDto, UpdateFolderDto } from './dto';
 import { FolderService } from './folder.service';
@@ -62,5 +64,15 @@ export class FolderController {
     @GetUser('id') userId: number,
   ) {
     return this.folderService.addMembers(addMembers, userId);
+  }
+
+  @Delete(':folderId/members/:memberId')
+  @Auth()
+  removeMember(
+    @Param('folderId', ParseUUIDPipe) folderId: string,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @GetUser('id') userId: number,
+  ) {
+    return this.folderService.removeMember(folderId, userId, memberId);
   }
 }

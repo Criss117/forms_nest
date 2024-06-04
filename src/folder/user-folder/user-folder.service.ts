@@ -214,7 +214,20 @@ export class UserFolderService {
     return response;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} userFolder`;
+  async remove(folderId: string, memberId: number) {
+    const userFolder = await this.userFolderRepository.findOne({
+      where: {
+        folder: { id: folderId },
+        user: { id: memberId },
+      },
+    });
+
+    if (!userFolder) throw new NotFoundException('UserFolder not found');
+
+    try {
+      return await this.userFolderRepository.remove(userFolder);
+    } catch (error) {
+      handleDBErros(error, this.PATH);
+    }
   }
 }

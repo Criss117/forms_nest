@@ -74,6 +74,7 @@ export class FormService {
         ...form,
         owner: userPermisions.isOwner,
         permission: userPermisions.permissions,
+        folderId: userPermisions.folderId,
       },
     };
   }

@@ -17,15 +17,13 @@ export class AnswersService {
 
   async create(answerDto: AnswerDto, questionId: number) {
     if (answerDto.id > 0) {
-      await this.update(answerDto.id, answerDto, questionId);
+      return await this.update(answerDto.id, answerDto, questionId);
     }
 
     const newAnswer = this.answerRepository.create({
       answer: answerDto.answer,
       question: { id: questionId },
     });
-
-    if (!newAnswer) throw new Error('Answer not created');
 
     try {
       return await this.answerRepository.save(newAnswer);

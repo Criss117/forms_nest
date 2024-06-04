@@ -53,11 +53,15 @@ export class QuestionsService {
       answerPromise.push(this.answerService.create(answer, questionCreated.id));
     });
 
-    await Promise.all(answerPromise);
+    const answersCreated = await Promise.all(answerPromise);
 
     return {
       statusCode: 200,
       message: 'Question created successfully',
+      data: {
+        ...questionCreated,
+        answers: answersCreated,
+      },
     };
   }
 
@@ -78,13 +82,19 @@ export class QuestionsService {
   async update(id: number, updateQuestionDto: UpdateQuestionDto) {
     const { answers, question } = updateQuestionDto;
 
-    const questionUpdated = await this.questionRepository.preload({
-      id,
-      ...question,
+    const questionUpdated = await this.questionRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        subtype: true,
+      },
     });
     if (!questionUpdated) throw new NotFoundException('Question not found');
     if (!questionUpdated.active)
       throw new NotFoundException('Question not found');
+
+    questionUpdated.question = question.question;
 
     try {
       this.questionRepository.save(questionUpdated);
@@ -94,35 +104,23 @@ export class QuestionsService {
 
     if (!answers) return { questionId: questionUpdated.id };
 
-    // const answerPromise: Promise<Answer>[] = [];
+    const answerPromise: Promise<Answer>[] = [];
 
-    // answers.forEach(async (answer) => {
-    //   if (!answer.id) {
-    //     const answerUpdated = this.answerRepository.create({
-    //       ...answer,
-    //       question: { id: questionUpdated.id },
-    //     });
-    //     answerPromise.push(this.answerRepository.save(answerUpdated));
-    //   }
-    //   if (answer.id && answer.id > 0) {
-    //     const answerUpdated = await this.answerRepository.preload({
-    //       id: answer.id,
-    //       ...answer,
-    //     });
-    //     answerPromise.push(this.answerRepository.save(answerUpdated));
-    //   }
-    //   if (answer.id && answer.id < 0) {
-    //     const answerUpdated = await this.answerRepository.preload({
-    //       id: answer.id * -1,
-    //       active: false,
-    //     });
-    //     answerPromise.push(this.answerRepository.save(answerUpdated));
-    //   }
-    // });
+    answers.forEach(async (answer) => {
+      answerPromise.push(this.answerService.create(answer, questionUpdated.id));
+    });
+
+    const answersCreated = await Promise.all(answerPromise);
 
     try {
-      // await Promise.all(answerPromise);
-      return { questionId: questionUpdated.id };
+      return {
+        statusCode: 200,
+        message: 'Question updated successfully',
+        data: {
+          ...questionUpdated,
+          answers: answersCreated,
+        },
+      };
     } catch (error) {
       handleDBErros(error, this.PATH);
     }

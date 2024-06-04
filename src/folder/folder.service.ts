@@ -202,4 +202,29 @@ export class FolderService {
       handleDBErros(error, this.PATH);
     }
   }
+
+  async removeMember(folderId: string, userId: number, memberId: number) {
+    const folderPermissions = await this.userFolderService.hasPermissions(
+      userId,
+      folderId,
+    );
+
+    if (!folderPermissions.isOwner) {
+      throw new ForbiddenException(
+        'You can not remove members from this folder',
+      );
+    }
+
+    try {
+      const response = await this.userFolderService.remove(folderId, memberId);
+
+      return {
+        statuscode: 200,
+        message: 'Member removed successfully',
+        data: response,
+      };
+    } catch (error) {
+      handleDBErros(error, this.PATH);
+    }
+  }
 }
